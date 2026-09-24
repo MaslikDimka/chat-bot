@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DocTrade Desk — документарные операции</title>
+<style>
+:root{
+  --bg:#0b1020;
+  --panel:#121a33;
+  --panel-2:#182243;
+  --line:rgba(255,255,255,.08);
+  --text:#e8edff;
+  --muted:#93a0c7;
+  --accent:#4f8cff;
+  --accent-2:#7c5cff;
+  --ok:#2fd48f;
+  --warn:#ffb454;
+  --danger:#ff6b81;
+  --radius:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(124,92,255,.25), transparent 60%),
+    radial-gradient(900px 500px at 10% 10%, rgba(79,140,255,.18), transparent 55%),
+    var(--bg);
+  color:var(--text);
+  line-height:1.6;
+  min-height:100vh;
+}
+a{color:inherit;text-decoration:none}
+.container{width:min(1140px,92%);margin:0 auto}
+
+/* ===== Header ===== */
+header{
+  position:sticky;top:0;z-index:50;
+  backdrop-filter:blur(14px);
+  background:rgba(11,16,32,.72);
+  border-bottom:1px solid var(--line);
+}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0;gap:16px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.3px}
+.logo-mark{
+  width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  display:grid;place-items:center;font-size:18px;
+  box-shadow:0 8px 24px rgba(79,140,255,.35);
+}
+.nav-links{display:flex;gap:26px;font-size:14.5px;color:var(--muted)}
+.nav-links a:hover{color:var(--text)}
+.btn{
+  border:0;cursor:pointer;font:inherit;font-weight:600;
+  padding:11px 20px;border-radius:12px;transition:.2s;
+  display:inline-flex;align-items:center;gap:8px;
+}
+.btn-primary{
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  color:#fff;box-shadow:0 10px 30px rgba(79,140,255,.35);
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 34px rgba(79,140,255,.5)}
+.btn-ghost{background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--line)}
+.btn-ghost:hover{background:rgba(255,255,255,.1)}
+.burger{display:none;background:none;border:0;color:var(--text);font-size:24px;cursor:pointer}
+
+/* ===== Hero ===== */
+.hero{padding:88px 0 60px;position:relative}
+.hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:13px;color:#bcd0ff;background:rgba(79,140,255,.14);
+  border:1px solid rgba(79,140,255,.35);
+  padding:7px 14px;border-radius:999px;margin-bottom:20px;
+}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px var(--ok)}
+h1{font-size:clamp(32px,4.6vw,54px);line-height:1.1;letter-spacing:-.5px;margin-bottom:18px}
+h1 span{
+  background:linear-gradient(120deg,#8ab4ff,#b79bff);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.lead{font-size:17.5px;color:var(--muted);max-width:560px;margin-bottom:30px}
+.hero-actions{display:flex;gap:14px;flex-wrap:wrap}
+.hero-stats{display:flex;gap:34px;margin-top:40px;flex-wrap:wrap}
+.stat b{display:block;font-size:26px}
+.stat small{color:var(--muted);font-size:13px}
+
+.hero-card{
+  background:linear-gradient(160deg,var(--panel),var(--panel-2));
+  border:1px solid var(--line);border-radius:22px;padding:22px;
+  box-shadow:0 30px 80px rgba(0,0,0,.45);
+  position:relative;overflow:hidden;
+}
+.hero-card::before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(79,140,255,.14),transparent 50%);
+  pointer-events:none;
+}
+.chat-preview{position:relative;z-index:1}
+.msg{display:flex;gap:10px;margin-bottom:14px;animation:fadeUp .5s both}
+.msg .avatar{
+  width:34px;height:34px;border-radius:10px;flex:none;
+  display:grid;place-items:center;font-size:15px;
+}
+.msg.bot .avatar{background:rgba(79,140,255,.2);border:1px solid rgba(79,140,255,.4)}
+.msg.user .avatar{background:rgba(124,92,255,.2);border:1px solid rgba(124,92,255,.4)}
+.bubble{
+  background:rgba(255,255,255,.05);border:1px solid var(--line);
+  padding:10px 14px;border-radius:14px;font-size:14.5px;max-width:85%;
+}
+.msg.user{flex-direction:row-reverse}
+.msg.user .bubble{background:rgba(79,140,255,.18);border-color:rgba(79,140,255,.35)}
+.typing span{
+  display:inline-block;width:7px;height:7px;border-radius:50%;
+  background:var(--muted);margin:0 2px;animation:blink 1.2s infinite;
+}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* ===== Sections ===== */
+section{padding:72px 0}
+.section-head{text-align:center;max-width:680px;margin:0 auto 46px}
+.section-head h2{font-size:clamp(26px,3vw,36px);letter-spacing:-.4px;margin-bottom:12px}
+.section-head p{color:var(--muted)}
+
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.card{
+  background:linear-gradient(160deg,var(--panel),rgba(24,34,67,.7));
+  border:1px solid var(--line);border-radius:var(--radius);
+  padding:26px;transition:.25s;position:relative;overflow:hidden;
+}
+.card:hover{transform:translateY(-6px);border-color:rgba(79,140,255,.45);box-shadow:0 20px 50px rgba(0,0,0,.4)}
+.card .icon{
+  width:52px;height:52px;border-radius:14px;display:grid;place-items:center;
+  font-size:24px;margin-bottom:16px;
+  background:linear-gradient(135deg,rgba(79,140,255,.22),rgba(124,92,255,.22));
+  border:1px solid rgba(255,255,255,.1);
+}
+.card h3{font-size:18px;margin-bottom:8px}
+.card p{color:var(--muted);font-size:14.5px}
+.card .num{
+  position:absolute;right:18px;top:14px;font-size:44px;font-weight:800;
+  color:rgba(255,255,255,.05);letter-spacing:-2px;
+}
+
+/* ===== Workflow ===== */
+.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.step{
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);padding:22px;position:relative;
+}
+.step b{
+  display:grid;place-items:center;width:34px;height:34px;border-radius:10px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  font-size:14px;margin-bottom:12px;
+}
+.step h4{margin-bottom:6px;font-size:15.5px}
+.step p{color:var(--muted);font-size:13.8px}
+
+/* ===== Status table ===== */
+.status-panel{
+  background:linear-gradient(160deg,var(--panel),var(--panel-2));
+  border:1px solid var(--line);border-radius:20px;overflow:hidden;
+  box-shadow:0 24px 60px rgba(0,0,0,.4);
+}
+.status-panel header{
+  position:static;background:transparent;border-bottom:1px solid var(--line);
+  padding:18px 22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;
+}
+.status-panel header h3{font-size:17px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14.2px;min-width:720px}
+th,td{padding:14px 22px;text-align:left;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.6px}
+tr:last-child td{border-bottom:0}
+tr:hover td{background:rgba(255,255,255,.03)}
+.pill{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:5px 12px;border-radius:999px;font-size:12.5px;font-weight:600;
+}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.pill.ok{background:rgba(47,212,143,.14);color:var(--ok)}
+.pill.warn{background:rgba(255,180,84,.14);color:var(--warn)}
+.pill.info{background:rgba(79,140,255,.14);color:#7fb0ff}
+.pill.err{background:rgba(255,107,129,.14);color:var(--danger)}
+
+/* ===== CTA ===== */
+.cta{
+  background:linear-gradient(135deg,rgba(79,140,255,.18),rgba(124,92,255,.18));
+  border:1px solid rgba(124,92,255,.35);
+  border-radius:24px;padding:52px 40px;text-align:center;
+}
+.cta h2{font-size:clamp(24px,3vw,34px);margin-bottom:12px}
+.cta p{color:var(--muted);max-width:560px;margin:0 auto 26px}
+
+footer{border-top:1px solid var(--line);padding:28px 0;color:var(--muted);font-size:13.5px}
+.foot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center}
+
+/* ===== Floating button ===== */
+.fab{
+  position:fixed;right:24px;bottom:24px;z-index:80;
+  width:64px;height:64px;border-radius:50%;border:0;cursor:pointer;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  color:#fff;font-size:26px;
+  box-shadow:0 14px 40px rgba(79,140,255,.5);
+  display:grid;place-items:center;transition:.25s;
+}
+.fab:hover{transform:scale(1.08) rotate(6deg)}
+.fab .badge{
+  position:absolute;top:-4px;right:-4px;background:var(--danger);
+  font-size:12px;font-weight:700;min-width:22px;height:22px;border-radius:999px;
+  display:grid;place-items:center;border:2px solid var(--bg);
+}
+
+/* ===== Modal / active window ===== */
+.overlay{
+  position:fixed;inset:0;z-index:90;
+  background:rgba(4,8,20,.7);backdrop-filter:blur(6px);
+  display:none;align-items:center;justify-content:center;padding:20px;
+}
+.overlay.open{display:flex;animation:fadeIn .2s both}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.window{
+  width:min(920px,100%);height:min(680px,92vh);
+  background:linear-gradient(165deg,#101832,#0d1428);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:20px;overflow:hidden;display:flex;flex-direction:column;
+  box-shadow:0 40px 120px rgba(0,0,0,.65);
+  animation:pop .28s cubic-bezier(.2,.9,.3,1.2) both;
+}
+@keyframes pop{from{opacity:0;transform:scale(.94) translateY(16px)}to{opacity:1;transform:none}}
+.win-titlebar{
+  display:flex;align-items:center;gap:12px;
+  padding:13px 16px;background:rgba(255,255,255,.04);
+  border-bottom:1px solid var(--line);user-select:none;
+}
+.win-dots{display:flex;gap:7px}
+.win-dots i{width:11px;height:11px;border-radius:50%;display:block}
+.win-dots i:nth-child(1){background:#ff5f57}
+.win-dots i:nth-child(2){background:#febc2e}
+.win-dots i:nth-child(3){background:#28c840}
+.win-title{font-size:13.5px;color:var(--muted);flex:1}
+.win-close{
+  background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--text);
+  width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:15px;
+}
+.win-close:hover{background:rgba(255,107,129,.25);border-color:var(--danger);color:var(--danger)}
+.win-body{display:flex;flex:1;min-height:0}
+.win-side{
+  width:250px;border-right:1px solid var(--line);
+  background:rgba(0,0,0,.18);padding:16px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;
+}
+.side-label{font-size:11.5px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-top:8px}
+.side-item{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:11px;
+  cursor:pointer;font-size:13.8px;border:1px solid transparent;transition:.15s;
+  color:var(--muted);background:transparent;text-align:left;font-family:inherit;
+}
+.side-item:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.side-item.active{
+  background:linear-gradient(135deg,rgba(79,140,255,.2),rgba(124,92,255,.16));
+  border-color:rgba(79,140,255,.4);color:#fff;
+}
+.side-item .ic{font-size:16px;width:22px;text-align:center}
+.win-main{flex:1;display:flex;flex-direction:column;min-width:0}
+.chat-head{
+  padding:14px 18px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:12px;
+}
+.chat-head .ava{
+  width:38px;height:38px;border-radius:12px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  display:grid;place-items:center;font-size:18px;
+}
+.chat-head b{display:block;font-size:14.5px}
+.chat-head small{color:var(--ok);font-size:12px;display:flex;align-items:center;gap:6px}
+.chat-head small::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.chat-messages{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
+.cmsg{display:flex;gap:10px;max-width:88%;animation:fadeUp .3s both}
+.cmsg .who{
+  width:32px;height:32px;border-radius:10px;flex:none;display:grid;place-items:center;font-size:14px;
+}
+.cmsg.bot .who{background:rgba(79,140,255,.18);border:1px solid rgba(79,140,255,.4)}
+.cmsg.user{align-self:flex-end;flex-direction:row-reverse}
+.cmsg.user .who{background:rgba(124,92,255,.18);border:1px solid rgba(124,92,255,.4)}
+.cmsg .text{
+  background:rgba(255,255,255,.05);border:1px solid var(--line);
+  padding:11px 14px;border-radius:14px;font-size:14.3px;
+}
+.cmsg.user .text{background:rgba(79,140,255,.16);border-color:rgba(79,140,255,.35)}
+.cmsg .text ul{margin:6px 0 0 18px}
+.cmsg .text li{margin-bottom:3px}
+.cmsg.card-msg .text{width:100%;max-width:520px}
+.mini-table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px;min-width:0}
+.mini-table th,.mini-table td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}
+.mini-table th{color:var(--muted);font-size:11px;text-transform:uppercase}
+.quick-actions{display:flex;gap:8px;flex-wrap:wrap;padding:0 18px 12px}
+.chip{
+  font-size:12.6px;padding:7px 13px;border-radius:999px;cursor:pointer;
+  background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--muted);
+  font-family:inherit;transition:.15s;
+}
+.chip:hover{background:rgba(79,140,255,.18);border-color:rgba(79,140,255,.45);color:#fff}
+.chat-input{
+  display:flex;gap:10px;padding:14px 18px;border-top:1px solid var(--line);
+  background:rgba(0,0,0,.2);
+}
+.chat-input input{
+  flex:1;background:rgba(255,255,255,.06);border:1px solid var(--line);
+  border-radius:12px;padding:12px 15px;color:var(--text);font:inherit;font-size:14.3px;outline:none;
+}
+.chat-input input:focus{border-color:rgba(79,140,255,.6);box-shadow:0 0 0 3px rgba(79,140,255,.18)}
+.chat-input button{
+  width:46px;height:46px;border-radius:12px;border:0;cursor:pointer;font-size:18px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;
+  display:grid;place-items:center;transition:.2s;
+}
+.chat-input button:hover{transform:translateY(-2px)}
+.hint{font-size:11.5px;color:var(--muted);padding:0 18px 12px;background:rgba(0,0,0,.2)}
+
+/* toast */
+.toast{
+  position:fixed;left:50%;bottom:30px;transform:translate(-50%,80px);
+  background:#132046;border:1px solid rgba(47,212,143,.4);color:#d7ffe9;
+  padding:13px 22px;border-radius:12px;z-index:120;font-size:14px;
+  opacity:0;transition:.35s;box-shadow:0 16px 40px rgba(0,0,0,.5);
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media(max-width:960px){
+  .hero-grid{grid-template-columns:1fr}
+  .cards{grid-template-columns:1fr 1fr}
+  .flow{grid-template-columns:1fr 1fr}
+  .nav-links{display:none}
+  .burger{display:block}
+  .win-side{display:none}
+}
+@media(max-width:640px){
+  .cards,.flow{grid-template-columns:1fr}
+  .window{height:94vh;border-radius:16px}
+  .hero{padding-top:56px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container nav">
+    <div class="logo"><div class="logo-mark">𝗗</div> DocTrade&nbsp;Desk</div>
+    <nav class="nav-links">
+      <a href="#features">Возможности</a>
+      <a href="#workflow">Как это работает</a>
+      <a href="#status">Статусы заявок</a>
+      <a href="#cta">Контакты</a>
+    </nav>
+    <button class="btn btn-primary" onclick="openWindow()">Открыть окно →</button>
+    <button class="burger" onclick="document.querySelector('.nav-links').style.display='flex'">☰</button>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container hero-grid">
+    <div>
+      <div class="eyebrow"><span class="dot"></span> Документарные операции: консультации, гарантии, аккредитивы</div>
+      <h1>Рабочее окно по <span>документарным операциям</span> для вашей команды</h1>
+      <p class="lead">
+        Консультируем сотрудников и контрагентов, формируем тексты гарантий и аккредитивов,
+        проверяем договоры по законодательству и политикам компании, направляем заявки в банки-партнёры
+        и возвращаем обратную связь по статусу.
+      </p>
+      <div class="hero-actions">
+        <button class="btn btn-primary" onclick="openWindow()">Запустить рабочее окно</button>
+        <a class="btn btn-ghost" href="#features">Смотреть возможности</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><b>5</b><small>направлений сервиса</small></div>
+        <div class="stat"><b>&lt; 15 мин</b><small>ответ по типовому запросу</small></div>
+        <div class="stat"><b>24/7</b><small>доступ к окну и статусам</small></div>
+      </div>
+    </div>
+
+    <div class="hero-card">
+      <div class="chat-preview">
+        <div class="msg bot"><div class="avatar">🤖</div><div class="bubble">Здравствуйте! Я помощник по документарным операциям. Чем помочь: консультация, текст гарантии, анализ договора, заявка в банк?</div></div>
+        <div class="msg user"><div class="avatar">👤</div><div class="bubble">Нужен текст независимой гарантии на 5 млн ₽</div></div>
+        <div class="msg bot"><div class="avatar">🤖</div><div class="bubble">Готовлю проект по шаблону компании. Проверю обязательные реквизиты и направлю на согласование.</div></div>
+        <div class="msg bot"><div class="avatar">🤖</div><div class="bubble typing"><span></span><span></span><span></span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="container">
+    <div class="section-head">
+      <h2>Что делает рабочее окно</h2>
+      <p>Пять ключевых задач документарного деска — в одном интерактивном окне для пользователя.</p>
+    </div>
+    <div class="cards">
+      <div class="card">
+        <span class="num">01</span>
+        <div class="icon">💬</div>
+        <h3>Консультирование</h3>
+        <p>Ответы сотрудникам и контрагентам по процедуре гарантий, аккредитивов, инкассо и документарных требований.</p>
+      </div>
+      <div class="card">
+        <span class="num">02</span>
+        <div class="icon">✍️</div>
+        <h3>Формирование текстов</h3>
+        <p>Черновики независимых и банковских гарантий, условий аккредитива и пунктов договоров по документарным операциям.</p>
+      </div>
+      <div class="card">
+        <span class="num">03</span>
+        <div class="icon">🔍</div>
+        <h3>Анализ и экспертиза</h3>
+        <p>Проверка проектов инструментов и договоров на соответствие законодательству, шаблонам и политикам компании.</p>
+      </div>
+      <div class="card">
+        <span class="num">04</span>
+        <div class="icon">🏦</div>
+        <h3>Заявки в банки</h3>
+        <p>Автоматическое формирование и направление заявок в банки-партнёры по агентским программам.</p>
+      </div>
+      <div class="card">
+        <span class="num">05</span>
+        <div class="icon">📡</div>
+        <h3>Обратная связь и статусы</h3>
+        <p>Отслеживание поданных заявок: принята, на рассмотрении, одобрена, запрошены документы, отклонена.</p>
+      </div>
+      <div class="card">
+        <span class="num">+</span>
+        <div class="icon">🛡️</div>
+        <h3>Единая политика</h3>
+        <p>Все ответы и проекты опираются на шаблоны, лимиты и внутренние политики компании.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WORKFLOW -->
+<section id="workflow">
+  <div class="container">
+    <div class="section-head">
+      <h2>Как это работает</h2>
+      <p>От запроса пользователя до статуса банка — четыре шага.</p>
+    </div>
+    <div class="flow">
+      <div class="step"><b>1</b><h4>Запрос в окне</h4><p>Пользователь выбирает задачу или пишет вопрос в рабочем окне.</p></div>
+      <div class="step"><b>2</b><h4>Разбор и черновик</h4><p>Окно формирует консультацию, проект текста или результат экспертизы.</p></div>
+      <div class="step"><b>3</b><h4>Заявка в банк</h4><p>При необходимости заявка собирается и направляется в банк-партнёр по агентской программе.</p></div>
+      <div class="step"><b>4</b><h4>Статус и фидбек</h4><p>Пользователь получает уведомления и обратную связь по каждой заявке.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- STATUS -->
+<section id="status">
+  <div class="container">
+    <div class="section-head">
+      <h2>Обратная связь и статусы заявок</h2>
+      <p>Активное окно показывает актуальные статусы поданных в банки заявок.</p>
+    </div>
+    <div class="status-panel">
+      <header>
+        <h3>📋 Заявки в банки-партнёры</h3>
+        <button class="btn btn-ghost" onclick="openWindow('status')">Открыть в окне</button>
+      </header>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>№ заявки</th><th>Банк</th><th>Инструмент</th><th>Сумма</th><th>Статус</th><th>Обновлено</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>APP-2417</td><td>Партнёр-Банк</td><td>Независимая гарантия</td><td>5 000 000 ₽</td><td><span class="pill ok">Одобрена</span></td><td>сегодня, 10:24</td></tr>
+            <tr><td>APP-2418</td><td>Торг-Банк</td><td>Аккредитив (безотзывный)</td><td>1 250 000 $</td><td><span class="pill warn">Запрошены документы</span></td><td>сегодня, 09:02</td></tr>
+            <tr><td>APP-2419</td><td>Партнёр-Банк</td><td>Гарантия платежа</td><td>800 000 ₽</td><td><span class="pill info">На рассмотрении</span></td><td>вчера, 17:40</td></tr>
+            <tr><td>APP-2420</td><td>Экспорт-Банк</td><td>Документарное инкассо</td><td>420 000 €</td><td><span class="pill err">Отклонена</span></td><td>вчера, 12:15</td></tr>
+            <tr><td>APP-2421</td><td>Торг-Банк</td><td>Аккредитив (отзывной)</td><td>300 000 $</td><td><span class="pill ok">Принята</span></td><td>2 дня назад</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta">
+  <div class="container">
+    <div class="cta">
+      <h2>Откройте активное окно документарного деска</h2>
+      <p>Консультация, проект инструмента, экспертиза договора, заявка в банк и её статус — в одном месте.</p>
+      <button class="btn btn-primary" onclick="openWindow()">Открыть окно пользователя</button>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container foot">
+    <div>© 2026 DocTrade Desk — документарные операции</div>
+    <div>Консультации · Гарантии · Аккредитивы · Заявки в банки</div>
+  </div>
+</footer>
+
+<!-- FAB -->
+<button class="fab" id="fab" onclick="openWindow()" title="Рабочее окно">💬<span class="badge">1</span></button>
+
+<!-- MODAL WINDOW -->
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeWindow()">
+  <div class="window" role="dialog" aria-modal="true" aria-label="Рабочее окно документарных операций">
+    <div class="win-titlebar">
+      <div class="win-dots"><i></i><i></i><i></i></div>
+      <div class="win-title">DocTrade Desk — окно пользователя · документарные операции</div>
+      <button class="win-close" onclick="closeWindow()" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="win-body">
+      <aside class="win-side">
+        <div class="side-label">Задачи</div>
+        <button class="side-item active" data-task="consult"><span class="ic">💬</span> Консультации</button>
+        <button class="side-item" data-task="draft"><span class="ic">✍️</span> Тексты гарантий и аккредитивов</button>
+        <button class="side-item" data-task="analyze"><span class="ic">🔍</span> Анализ договоров</button>
+        <button class="side-item" data-task="apply"><span class="ic">🏦</span> Заявка в банк</button>
+        <button class="side-item" data-task="status"><span class="ic">📡</span> Статусы заявок</button>
+        <div class="side-label">Сессия</div>
+        <button class="side-item" onclick="clearChat()"><span class="ic">🧹</span> Очистить диалог</button>
+      </aside>
+
+      <div class="win-main">
+        <div class="chat-head">
+          <div class="ava">🤖</div>
+          <div>
+            <b id="winTaskTitle">Консультации по документарным операциям</b>
+            <small>онлайн · ответ по типовому запросу &lt; 15 мин</small>
+          </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages"></div>
+
+        <div class="quick-actions" id="quickActions"></div>
+        <div class="hint">Enter — отправить · Shift+Enter — новая строка</div>
+
+        <div class="chat-input">
+          <input id="chatInput" type="text" placeholder="Опишите задачу: консультация, текст гарантии, анализ, заявка…" autocomplete="off">
+          <button id="sendBtn" title="Отправить">➤</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ========== Task presets ========== */
+const TASKS = {
+  consult: {
+    title: "Консультации по документарным операциям",
+    greeting: "Здравствуйте! Консультирую сотрудников и контрагентов компании по документарным операциям: гарантии, аккредитивы, инкассо, документарные требования. Задайте вопрос или выберите тему ниже.",
+    chips: ["Как работает безотзывный аккредитив?", "Чем гарантия отличается от поручительства?", "Сроки проверки документов в инкассо?", "Кто может быть бенефициаром гарантии?"],
+    answers: {
+      "аккредитив": "Безотзывный аккредитив открывается банком по поручению плательщика и не может быть отменён без согласия бенефициара. Банк обязан произвести платёж при предъявлении строго соответствующих документов. Рекомендую включать в условия: срок действия, максимальную сумму, период представления документов, условия частичных платежей.",
+      "гаранти": "Независимая гарантия — обязательство банка/гаранта уплатить денежную сумму по первому требованию бенефициара при нарушении принципалом обязательств. Отличие от поручительства: самостоятельность требования и отсутствие ссылки на основной договор в расчётах. В тексте фиксируем: сумму, срок, основание платежа,減-frequency уменьшения лимита, документы для требования.",
+      "инкассо": "При документарном инкассо банк действует только по инструкциям и не проверяет документы по существу. Сроки зависят от условий dock-terms (D/P, D/A): при D/P документы выдаются только после платежа; при D/A — против акцепта тратты. Контрольные сроки ответа корреспондент-банка — обычно 1–3 рабочих дня.",
+      "бенефициар": "Бенефициар — сторона, в пользу которой выдан инструмент (гарантия/аккредитив). Идентификация должна полностью соответствовать договору: наименование, ИНН/резидентность, реквизиты. Расхождения приводят к отказу в платеже — рекомендую сверять с карточкой контрагента."
+    },
+    default: "Принято! По вашему вопросу: документарные операции строятся на строгом соответствии документов условиям инструмента. Уточните тип операции (гарантия, аккредитив, инкассо), сумму, валюту и сторон — подготовлю точную консультацию со ссылками на шаблоны компании."
+  },
+  draft: {
+    title: "Формирование текстов и пунктов договоров",
+    greeting: "Готовлю проекты текстов: независимые и банковские гарантии, условия аккредитива, пункты договоров по документарным операциям. Выберите тип документа.",
+    chips: ["Проект независимой гарантии", "Условия аккредитива", "Пункт договора о документарных операциях", "Текст требования по гарантии"],
+    answers: {
+      "гаранти": "Проект независимой гарантии (по шаблону компании):\n\n1. Бенефициар, принципал, сумма и валюта.\n2. Срок действия и дата истечения (включая безусловный срок).\n3. Основание платежа: «по первому письменному требованию с указанием нарушения».\n4. Условия частичного уменьшения лимита.\n5. Требования к форме требования (подпись, реквизиты, документы).\n6. Применимое право и место выдачи.\n\nСформирую полный текст, если пришлёте реквизиты сторон и сумму.",
+      "аккредитив": "Проект условий аккредитива:\n\n• Тип: безотзывный, подтверждённый/неподтверждённый.\n• Сумма и валюта, право частичных платежей.\n• Срок действия и последний день предъявления.\n• Требования к документам (коносамент, инвойс, сертификат, упаковочный лист).\n• Условия отгрузки, порт/терминал.\n• Банк-исполнитель и агентская программа.\n\nУточните торговые условия (Incoterms 2020) — добавлю в проект.",
+      "пункт": "Проект пункта договора о документарных операциях:\n\n«Обеспечение исполнения. Стороны согласовали, что расчёты по настоящему Договору обеспечиваются [независимой гарантией / безотзывным аккредитивом]. Вид инструмента, сумма, срок действия и порядок предъявления требований определяются в Приложении №__ к Договору. Банк-партнёр выбирается из агентской программы [Компания]».",
+      "требование": "Текст требования по гарантии:\n\n«В связи с неисполнением принципалом обязательств в срок __.__.____ требуем уплатить сумму ___ (валюта) в порядке независимой гарантии №__ от __.__.____. Требование составлено в письменной форме, подписано уполномоченным лицом, содержит ссылку на гарантию и описание нарушения. Прилагаем документы, указанные в гарантии.»"
+    },
+    default: "Готовлю черновик по шаблону компании. Для точного текста укажите: тип инструмента, стороны (бенефициар/принципал), сумму и валюту, срок, основание платежа и требования к документам."
+  },
+  analyze: {
+    title: "Анализ проектов и договоров",
+    greeting: "Провожу анализ проектов инструментов и договоров на соответствие законодательству, шаблонам и политикам компании. Вставьте фрагмент или опишите предмет проверки.",
+    chips: ["Проверить пункт о гарантии", "Соответствие UCP 600", "Политика: лимиты по гарантиям", "Риски формулировок аккредитива"],
+    answers: {
+      "пункт": "Чек-лист анализа пункта о гарантии:\n\n✓ Ясность основания платежа (отсылка к нарушению или «по требованию»).\n✓ Сумма, валюта и механизм уменьшения.\n✓ Срок действия и порядок продления.\n✓ Отсутствие противоречий с основным договором (принцип самостоятельности).\n✓ Соответствие внутренним лимитам и шаблону компании.\n\nПришлите формулировку — укажу замечания по пунктам.",
+      "ucp": "Соответствие UCP 600 (для аккредитивов):\n\n• Обязательность упоминания UCP 600 в аккредитиве (ст. 1).\n• Самостоятельность операций банков (ст. 4).\n• Строгая проверка документов «по внешнему виду» (ст. 16).\n• Сроки банков: 5 банковских дней на проверку (ст. 14).\n• Отсутствие расхождений в переводах документов.\n\nРасхождения = основание для отказа в платеже.",
+      "лимит": "Политика компании по лимитам:\n\n• Индивидуальный лимит на принципала/контрагента.\n• Совокупный лимит по агентской программе банка.\n• Валютный контроль и лимиты по сделкам с нерезидентами.\n• Экспозиция по открытым инструментам не должна превышать утверждённый порог.\n\nПроверьте сумму и срок — сверю с действующими лимитами и подскажу, требуется ли эскалация.",
+      "риски": "Типичные риски формулировок аккредитива:\n\n⚠ Смешанные условия перевода и оригиналов документов.\n⚠ Нереальные сроки предъявления (короче времени доставки).\n⚠ Отсутствие чёткого перечня документов → спор о достаточности.\n⚠ Прямые отсылки к коммерческому договору в платежных условиях.\n⚠ Расхождения наименования бенефициара с карточкой контрагента.\n\nВставьте текст — проведу построчную экспертизу."
+    },
+    default: "Проведу анализ по трём основаниям: (1) соответствие законодательству, (2) соответствие шаблонам компании, (3) соответствие внутренним политикам и лимитам. Пришлите проект — верну заключение со списком замечаний и предлагаемыми правками."
+  },
+  apply: {
+    title: "Заявки в банки-партнёры",
+    greeting: "Формирую и направляю заявки в банки-партнёры по агентским программам. Выберите инструмент — соберу комплект данных для отправки.",
+    chips: ["Заявка на независимую гарантию", "Заявка на аккредитив", "Проверить комплект документов", "Направить заявку в банк"],
+    answers: {
+      "гарантию": "Заявка на независимую гарантию — комплект:\n\n1. Заявление по форме банка (сформирую черновик).\n2. Реквизиты принципала и бенефициара.\n3. Сумма, валюта, срок действия, текст гарантии.\n4. Основной договор / счёт-оферта.\n5. Открытый лимит по агентской программе.\n\nУкажите сторон, сумму и срок — подготовлю заявку к направлению.",
+      "аккредитив": "Заявка на аккредитив — комплект:\n\n1. Заявление на открытие аккредитива.\n2. Условия аккредитива (проект из раздела «Тексты»).\n3. Контракт и инвойс (при наличии).\n4. Платёжное поручение на комиссию/обеспечение.\n5. Подтверждение лимита по агентской программе.\n\nПосле формирования заявка будет направлена в выбранный банк-партнёр.",
+      "документ": "Комплектность документов:\n\n• Заявление и условия инструмента — обязательно.\n• Учредительные документы — при первичном обращении.\n• Контракт/договор — по требованию банка.\n• Документы по валютному контролю — для нерезидентов.\n\nПроверю комплект и укажу недостающие позиции до подачи.",
+      "направить": "Заявка сформирована и готова к направлению.\n\nСтатус: <b>черновик</b> → после вашего подтверждения будет отправлена в банк-партнёр по агентской программе. Ответ банка обычно поступает в течение 1–3 рабочих дней — вы получите уведомление и статус в разделе «Статусы заявок»."
+    },
+    default: "Соберу заявку под ваш инструмент. Укажите: банк-партнёр (из агентской программы), тип инструмента, сумму, валюту, срок и стороны — сформирую комплект и направлю заявку."
+  },
+  status: {
+    title: "Обратная связь и статусы заявок",
+    greeting: "Здесь статусы поданных в банки-партнёры заявок и обратная связь по ним. Выберите заявку или запросите сводку.",
+    chips: ["Сводка по всем заявкам", "APP-2418: что нужно дослать?", "APP-2419: сроки решения", "Обновить статусы"],
+    answers: {
+      "сводка": "__TABLE__",
+      "2418": "APP-2418 (Торг-Банк, аккредитив 1 250 000 $):\n\nСтатус: <b>запрошены документы</b>.\nБанк просит дослать: подписанную копию инвойса и сертификат происхождения. Срок ответа — 2 рабочих дня. Обратная связь: направьте сканы — включу в комплект и обновлю заявку.",
+      "2419": "APP-2419 (Партнёр-Банк, гарантия 800 000 ₽):\n\nСтатус: <b>на рассмотрении</b>.\nКомплаенс-проверка пройдена, ожидается решение кредитного комитета. Ориентировочный срок — до 3 рабочих дней. Уведомление придёт автоматически при смене статуса.",
+      "обновить": "Статусы обновлены только что.\n\n• APP-2417 — Одобрена ✅\n• APP-2418 — Запрошены документы ⚠️\n• APP-2419 — На рассмотрении ℹ️\n• APP-2420 — Отклонена ❌ (причина: превышение лимита по агентской программе)\n• APP-2421 — Принята ℹ️"
+    },
+    default: "Покажу статус по вашей заявке. Укажите номер (например, APP-2418) или попросите сводку по всем поданным заявкам в банки-партнёры."
+  }
+};
+
+const TABLE_HTML = `
+<table class="mini-table">
+  <thead><tr><th>№</th><th>Банк</th><th>Инструмент</th><th>Статус</th></tr></thead>
+  <tbody>
+    <tr><td>APP-2417</td><td>Партнёр-Банк</td><td>Гарантия</td><td><span class="pill ok">Одобрена</span></td></tr>
+    <tr><td>APP-2418</td><td>Торг-Банк</td><td>Аккредитив</td><td><span class="pill warn">Запрошаны документы</span></td></tr>
+    <tr><td>APP-2419</td><td>Партнёр-Банк</td><td>Гарантия</td><td><span class="pill info">На рассмотрении</span></td></tr>
+    <tr><td>APP-2420</td><td>Экспорт-Банк</td><td>Инкассо</td><td><span class="pill err">Отклонена</span></td></tr>
+    <tr><td>APP-2421</td><td>Торг-Банк</td><td>Аккредитив</td><td><span class="pill info">Принята</span></td></tr>
+  </tbody>
+</table>`;
+
+/* ========== State ========== */
+let currentTask = "consult";
+const overlay = document.getElementById("overlay");
+const messagesEl = document.getElementById("chatMessages");
+const inputEl = document.getElementById("chatInput");
+const chipsEl = document.getElementById("quickActions");
+const titleEl = document.getElementById("winTaskTitle");
+const toastEl = document.getElementById("toast");
+
+function openWindow(task){
+  overlay.classList.add("open");
+  document.body.style.overflow = "hidden";
+  document.getElementById("fab").querySelector(".badge").style.display = "none";
+  if(task) selectTask(task, true);
+  else if(!messagesEl.children.length) greet();
+  setTimeout(()=>inputEl.focus(),120);
+}
+function closeWindow(){
+  overlay.classList.remove("open");
+  document.body.style.overflow = "";
+}
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape" && overlay.classList.contains("open")) closeWindow();
+});
+
+function selectTask(task, silent){
+  currentTask = task;
+  document.querySelectorAll(".side-item[data-task]").forEach(b=>{
+    b.classList.toggle("active", b.dataset.task===task);
+  });
+  titleEl.textContent = TASKS[task].title;
+  messagesEl.innerHTML = "";
+  greet();
+  if(!silent) toast("Раздел: "+TASKS[task].title);
+}
+document.querySelectorAll(".side-item[data-task]").forEach(b=>{
+  b.addEventListener("click",()=>selectTask(b.dataset.task));
+});
+
+function renderChips(){
+  chipsEl.innerHTML = "";
+  TASKS[currentTask].chips.forEach(c=>{
+    const btn = document.createElement("button");
+    btn.className = "chip"; btn.textContent = c;
+    btn.onclick = ()=>{ inputEl.value = c; sendMessage(); };
+    chipsEl.appendChild(btn);
+  });
+}
+
+function addMsg(role, html){
+  const wrap = document.createElement("div");
+  wrap.className = "cmsg "+role;
+  wrap.innerHTML = `<div class="who">${role==="bot"?"🤖":"👤"}</div><div class="text">${html}</div>`;
+  messagesEl.appendChild(wrap);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  return wrap;
+}
+
+function greet(){
+  addMsg("bot", TASKS[currentTask].greeting);
+  renderChips();
+}
+
+function typing(){
+  return addMsg("bot", `<span class="typing"><span></span><span></span><span></span></span>`);
+}
+
+function findAnswer(task, q){
+  const preset = TASKS[task].answers;
+  const lower = q.toLowerCase();
+  let best = null, bestLen = 0;
+  for(const key in preset){
+    if(lower.includes(key) && key.length > bestLen){ best = key; bestLen = key.length; }
+  }
+  let text = best ? preset[best] : TASKS[task].default;
+  if(text === "__TABLE__") text = TABLE_HTML;
+  return text;
+}
+
+function sendMessage(){
+  const q = inputEl.value.trim();
+  if(!q) return;
+  addMsg("user", escapeHtml(q).replace(/\n/g,"<br>"));
+  inputEl.value = "";
+  chipsEl.innerHTML = "";
+  const t = typing();
+  const delay = 700 + Math.min(q.length*12, 900);
+  setTimeout(()=>{
+    t.querySelector(".text").innerHTML = findAnswer(currentTask, q);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    renderChips();
+    if(currentTask==="apply" && /направ|отправ|подай|submit/i.test(q)){
+      toast("Заявка направлена в банк-партнёр ✔");
+    }
+    if(currentTask==="status" && /обнов/i.test(q)){
+      toast("Статусы обновлены ✔");
+    }
+  }, delay);
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+function clearChat(){
+  messagesEl.innerHTML = "";
+  greet();
+  toast("Диалог очищен");
+}
+
+document.getElementById("sendBtn").addEventListener("click", sendMessage);
+inputEl.addEventListener("keydown", e=>{
+  if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); sendMessage(); }
+});
+
+let toastTimer;
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>toastEl.classList.remove("show"), 2600);
+}
+
+/* greeting on first load */
+greet();
+</script>
+</body>
+</html>
