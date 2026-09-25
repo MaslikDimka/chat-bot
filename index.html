@@ -330,6 +330,37 @@ footer{border-top:1px solid var(--line);padding:28px 0;color:var(--muted);font-s
 }
 .toast.show{opacity:1;transform:translate(-50%,0)}
 
+/* ===== Auth ===== */
+.auth-overlay{
+  position:fixed;inset:0;z-index:200;
+  background:
+    radial-gradient(800px 500px at 80% -10%, rgba(200,40,50,.3), transparent 60%),
+    radial-gradient(600px 400px at 10% 10%, rgba(140,16,26,.35), transparent 55%),
+    var(--bg);
+  display:flex;align-items:center;justify-content:center;padding:20px;
+}
+.auth-overlay.hidden{display:none}
+.auth-card{
+  width:min(400px,100%);background:linear-gradient(160deg,var(--panel),var(--panel-2));
+  border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:34px 30px;
+  box-shadow:0 40px 120px rgba(0,0,0,.6);text-align:center;
+  animation:pop .28s cubic-bezier(.2,.9,.3,1.2) both;
+}
+.auth-card .logo-mark{margin:0 auto 14px}
+.auth-card h2{font-size:22px;margin-bottom:6px}
+.auth-sub{color:var(--muted);font-size:13.5px;margin-bottom:22px}
+.auth-card input{
+  width:100%;background:rgba(255,255,255,.06);border:1px solid var(--line);
+  border-radius:12px;padding:12px 15px;color:var(--text);font:inherit;font-size:14.5px;
+  outline:none;margin-bottom:12px;
+}
+.auth-card input:focus{border-color:rgba(212,35,47,.65);box-shadow:0 0 0 3px rgba(212,35,47,.18)}
+.auth-card .btn{width:100%;justify-content:center;margin-top:4px}
+.auth-error{display:none;color:var(--danger);font-size:13px;margin-top:12px}
+.auth-error.show{display:block}
+.auth-hint{color:var(--muted);font-size:12px;margin-top:14px;opacity:.7}
+.auth-exit{padding:8px 14px;font-size:13.5px}
+
 @media(max-width:960px){
   .hero-grid{grid-template-columns:1fr}
   .cards{grid-template-columns:1fr 1fr}
@@ -347,6 +378,20 @@ footer{border-top:1px solid var(--line);padding:28px 0;color:var(--muted);font-s
 </head>
 <body>
 
+<!-- AUTH -->
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-card">
+    <div class="logo-mark">𝗗</div>
+    <h2>LUK&nbsp;Doc — вход</h2>
+    <p class="auth-sub">Войдите, чтобы открыть рабочее окно</p>
+    <input id="loginInput" type="text" placeholder="Логин" autocomplete="username">
+    <input id="passInput" type="password" placeholder="Пароль" autocomplete="current-password">
+    <button class="btn btn-primary" id="loginBtn">Войти</button>
+    <div class="auth-error" id="authError">Неверный логин или пароль</div>
+    <div class="auth-hint">Демо-доступ: <b>user</b> / <b>demo</b></div>
+  </div>
+</div>
+
 <header>
   <div class="container nav">
     <div class="logo"><div class="logo-mark">LUK</div> Dock</div>
@@ -358,6 +403,7 @@ footer{border-top:1px solid var(--line);padding:28px 0;color:var(--muted);font-s
     </nav>
     <button class="btn btn-primary" onclick="openWindow()">Открыть окно →</button>
     <button class="burger" onclick="document.querySelector('.nav-links').style.display='flex'">☰</button>
+    <button class="btn btn-ghost auth-exit" onclick="logout()">Выйти</button>
   </div>
 </header>
 
@@ -752,6 +798,43 @@ function toast(msg){
   toastEl.classList.add("show");
   clearTimeout(toastTimer);
   toastTimer = setTimeout(()=>toastEl.classList.remove("show"), 2600);
+}
+
+/* ========== Demo auth ========== */
+const AUTH_USERS = { "user": "demo" };
+const authOverlay = document.getElementById("authOverlay");
+const loginInput = document.getElementById("loginInput");
+const passInput = document.getElementById("passInput");
+const authError = document.getElementById("authError");
+
+function doLogin(){
+  const user = loginInput.value.trim().toLowerCase();
+  const pass = passInput.value;
+  if(AUTH_USERS[user] && AUTH_USERS[user] === pass){
+    localStorage.setItem("lukdoc_auth", "1");
+    authOverlay.classList.add("hidden");
+    document.body.style.overflow = "";
+    loginInput.value = ""; passInput.value = ""; authError.classList.remove("show");
+  } else {
+    authError.classList.add("show");
+    passInput.value = "";
+    passInput.focus();
+  }
+}
+function logout(){
+  localStorage.removeItem("lukdoc_auth");
+  authOverlay.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+  loginInput.focus();
+}
+document.getElementById("loginBtn").addEventListener("click", doLogin);
+[loginInput, passInput].forEach(el=>{
+  el.addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); doLogin(); } });
+});
+
+if(localStorage.getItem("lukdoc_auth") !== "1"){
+  document.body.style.overflow = "hidden";
+  loginInput.focus();
 }
 
 /* greeting on first load */
